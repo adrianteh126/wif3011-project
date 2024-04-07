@@ -1,0 +1,19 @@
+{
+  // Tailwind
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "tailwindCSS": {
+    "includeLanguages": {
+      "plaintext": "html"
+    }
+  },
+
+  // Prettier
+  "prettier": {
+    "printWidth": 120
+  }
+}
