@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
 import { LineMdLoadingTwotoneLoop } from '@/components/icon/LineMdLoadingTwotoneLoop'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 interface Result {
   data: {
@@ -22,12 +23,16 @@ interface Result {
   elapsed_time: number
 }
 
+type Algorithm = 'sequential' | 'concurrent-java-stream'
+
 export default function Home() {
+  const baseUrl = 'http://localhost:4000'
   const { toast } = useToast()
 
   const [selectedFile, setSelectedFile] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [data, setData] = useState<Result>()
+  const [selectOption, setSelectedOption] = useState<Algorithm>('sequential')
 
   const handleFileChange = (event: any) => {
     setSelectedFile(event.target.files[0])
@@ -46,7 +51,12 @@ export default function Home() {
     formData.append('file', selectedFile)
 
     try {
-      const response = await fetch('http://localhost:4000/api/upload', {
+      const fetchUrl =
+        selectOption == 'sequential'
+          ? `${baseUrl}/api/sequential`
+          : `${baseUrl}/api/concurrent/java-stream`
+
+      const response = await fetch(fetchUrl, {
         method: 'POST',
         body: formData
       })
@@ -61,9 +71,16 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error uploading file:', error)
-      toast({ title: '❌ Failed to upload file', description: String(error) })
+      toast({
+        title: '❌ Failed to upload file',
+        description: String(error)
+      })
     }
     setIsLoading(false)
+  }
+
+  const handleOptionChange = (value: Algorithm) => {
+    setSelectedOption(value)
   }
 
   return (
@@ -79,14 +96,32 @@ export default function Home() {
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
-            <CardContent>
+            <CardContent className="flex flex-col gap-6">
               <div className="grid w-full max-w-sm items-center gap-1.5">
                 <Label htmlFor="text-file">Text File</Label>
                 <Input id="text-file" type="file" onChange={handleFileChange} />
               </div>
+              <RadioGroup
+                defaultValue="sequential"
+                onValueChange={handleOptionChange}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="sequential" id="option-sequential" />
+                  <Label htmlFor="option-sequential">Sequential</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="concurrent-java-stream"
+                    id="option-concurrent"
+                  />
+                  <Label htmlFor="option-concurrent">
+                    Concurrent / JavaStream
+                  </Label>
+                </div>
+              </RadioGroup>
             </CardContent>
             <CardFooter>
-              <Button type="submit">
+              <Button type="submit" disabled={isLoading}>
                 Upload
                 {isLoading && (
                   <div className="ps-3">
@@ -111,7 +146,7 @@ export default function Home() {
                 <div className="ps-6 grid grid-cols-5">
                   {Object.entries(data.data).map(([key, value]) => (
                     <div key={key}>
-                      <p>
+                      <p className="truncate">
                         &quot;<strong>{key}</strong>&quot;: {value}
                       </p>
                     </div>
