@@ -25,14 +25,19 @@ public class ProcessFileServiceUtil {
     }
 
     public Map<String, Integer> sequentialGenerateWordMap(String document) {
-        document = document.toLowerCase().replaceAll(WORD_WITH_APOSTROPHE_REGEX, " ");
         try {
             String[] stopWords = Files.readString(STOP_WORD_FILE_PATH).split("\\s+");
             Set<String> stopWordsSet = new HashSet<>(Arrays.asList(stopWords));
             Map<String, Integer> data = new HashMap<>();
+
+            document = document.toLowerCase()
+                    .replaceAll(WORD_WITH_APOSTROPHE_REGEX, " ")
+                    .replaceAll("\\b(" + String.join("|", stopWordsSet) + ")\\b", "")
+                    .trim();
+            String[] strs = document.split("\\s+");
             Stream.of(document.split("\\s+")).forEach((word) -> {
                 // update word map
-                if (!stopWordsSet.contains(word)) data.compute(word, (key, value) -> value == null ? 1 : value + 1);
+                data.compute(word, (key, value) -> value == null ? 1 : value + 1);
             });
             return data;
         } catch (IOException e) {
