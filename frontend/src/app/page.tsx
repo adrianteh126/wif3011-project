@@ -4,7 +4,14 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
 import { LineMdLoadingTwotoneLoop } from '@/components/icon/LineMdLoadingTwotoneLoop'
 
@@ -54,6 +61,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error uploading file:', error)
+      toast({ title: '❌ Failed to upload file', description: String(error) })
     }
     setIsLoading(false)
   }
@@ -66,7 +74,9 @@ export default function Home() {
         <Card>
           <CardHeader>
             <CardTitle>Upload File</CardTitle>
-            <CardDescription>Upload your .txt file here. Not exceeding 10mb.</CardDescription>
+            <CardDescription>
+              Upload your .txt file here. Not exceeding 10mb.
+            </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent>
@@ -90,20 +100,24 @@ export default function Home() {
         <br />
         <div>
           {data ? (
-            <div>
-              <p>
-                Elapsed Time: <strong> {data.elapsed_time} ms</strong>
-              </p>
-              <p>Data: </p>
-              <ul className="ps-6">
-                {Object.entries(data.data).map(([key, value]) => (
-                  <li key={key}>
-                    <p>
-                      &quot;<strong>{key}</strong>&quot;: {value}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+            <div className="flex flex-col ">
+              <div>
+                <p>
+                  Elapsed Time: <strong> {data.elapsed_time} ms</strong>
+                </p>
+              </div>
+              <div>
+                <p>Data: </p>
+                <div className="ps-6 grid grid-cols-5">
+                  {Object.entries(data.data).map(([key, value]) => (
+                    <div key={key}>
+                      <p>
+                        &quot;<strong>{key}</strong>&quot;: {value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <div>
