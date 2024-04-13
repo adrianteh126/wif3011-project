@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.wif3011.project.dto.MyRequest;
 import org.wif3011.project.service.MyService;
 import org.wif3011.project.utility.Timer;
 
@@ -46,10 +45,4 @@ public class MyController {
         }
     }
 
-    @PostMapping("/hello")
-    public String getHelloMessage(@RequestBody MyRequest request) {
-        String name = request.getName();
-        String message = myService.generateHelloMessage(name);
-        return "{\"message\":\"" + message + "\"}";
-    }
 }
