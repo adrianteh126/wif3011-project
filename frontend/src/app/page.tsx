@@ -23,7 +23,7 @@ interface Result {
   elapsed_time: number
 }
 
-type Algorithm = 'sequential' | 'concurrent-java-stream'
+type Algorithm = 'sequential' | 'concurrent-java-stream' | 'concurrent-fork-join'
 
 export default function Home() {
   const baseUrl = 'http://localhost:4000'
@@ -52,9 +52,9 @@ export default function Home() {
 
     try {
       const fetchUrl =
-        selectOption == 'sequential'
-          ? `${baseUrl}/api/sequential`
-          : `${baseUrl}/api/concurrent/java-stream`
+        selectOption == 'sequential' ? `${baseUrl}/api/sequential` :
+                     'concurrent-java-stream' ? `${baseUrl}/api/concurrent/java-stream` :
+                     'concurrent-fork-join' ? `${baseUrl}/api/concurrent/fork-join` : ''
 
       const response = await fetch(fetchUrl, {
         method: 'POST',
@@ -116,6 +116,15 @@ export default function Home() {
                   />
                   <Label htmlFor="option-concurrent">
                     Concurrent / JavaStream
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="concurrent-fork-join"
+                    id="option-concurrent-2"
+                  />
+                  <Label htmlFor="option-concurrent-2">
+                    Concurrent / ForkJoin
                   </Label>
                 </div>
               </RadioGroup>

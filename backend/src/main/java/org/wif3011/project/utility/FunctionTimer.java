@@ -1,7 +1,5 @@
 package org.wif3011.project.utility;
 
-import java.util.concurrent.TimeUnit;
-
 public class FunctionTimer {
     private final Timer timer;
 
