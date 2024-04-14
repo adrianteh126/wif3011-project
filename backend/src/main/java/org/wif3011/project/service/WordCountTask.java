@@ -5,10 +5,12 @@ import java.util.concurrent.RecursiveTask;
 
 public class WordCountTask extends RecursiveTask<Map<String, Integer>> {
     private final String[] words;
+    private final int current;
     private final int chunkSize;
 
-    public WordCountTask(String[] words, int chunkSize) {
+    public WordCountTask(String[] words, int current, int chunkSize) {
         this.words = words;
+        this.current = current;
         this.chunkSize = chunkSize;
     }
 
@@ -16,24 +18,25 @@ public class WordCountTask extends RecursiveTask<Map<String, Integer>> {
     protected Map<String, Integer> compute() {
         List<WordCountTask> tasks = new ArrayList<>();
         Map<String, Integer> wordCountMap = new HashMap<>();
-
+        String [] temp = new String[chunkSize];
         try {
-            String [] temp = new String[chunkSize];
-            System.arraycopy(words, 0, temp, 0, chunkSize);
-            tasks.add(new WordCountTask(temp, chunkSize));
-            for (String word : words) {
-                word = word.toLowerCase().replaceAll("[^a-zA-Z]", "");
+            if(current + chunkSize >= words.length){
+                System.arraycopy(words, current, temp, 0, words.length - current);
+            }
+            else{
+                System.arraycopy(words, current, temp, 0, chunkSize);
+                tasks.add(new WordCountTask(words, current + chunkSize, chunkSize));
+            }
 
-                // do filtering, checking -> check if the word is not empty and not include stopwords
+            for (String word : temp) {
+                if(word == null){
+                    continue;
+                }
                 if (!word.isEmpty()) {
-                    // defaulting to 0 if it's not yet in the map, and then increments this count by 1
-                    // add into wordCountMap and increase the count
                     wordCountMap.put(word, wordCountMap.getOrDefault(word, 0) + 1);
                 }
             }
-            //  loops through all subtasks added to the tasks list and starts their asynchronous execution in the background
             for (WordCountTask task : tasks) {
-                // submit task to task pool
                 task.fork();
             }
             for (WordCountTask task : tasks) {

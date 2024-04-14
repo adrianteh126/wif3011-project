@@ -15,20 +15,19 @@ public class SecondConcurrentServiceImpl implements SecondConcurrentService {
 
     private final ProcessFileServiceUtil processFileUtil;
     private Map<String, Integer> wordMap;
-    private ForkJoinPool pool;
 
     @Override
     public Map<String, Integer> secondConcurrentWordMap(MultipartFile file) {
-        String document = processFileUtil.convertFileToString(file);
-        document = processFileUtil.concurrentFilterDocs(document);
-        wordMap = new HashMap<>();
-        int numofThreads = Runtime.getRuntime().availableProcessors();
-        int range = document.length() / numofThreads;
         // try with resource
         try{
-            pool = new ForkJoinPool();
+            String document = processFileUtil.convertFileToString(file);
+            document = processFileUtil.concurrentFilterDocs(document);
+            wordMap = new HashMap<>();
+            int numofThreads = Runtime.getRuntime().availableProcessors();
             String[] words = document.split("\\s+");
-            wordMap = pool.submit(new WordCountTask(words, range)).get();
+            int range = words.length / numofThreads;
+            ForkJoinPool pool = new ForkJoinPool();
+            wordMap = pool.submit(new WordCountTask(words, 0, range)).get();
         }
         catch (Exception e){
             e.printStackTrace();
