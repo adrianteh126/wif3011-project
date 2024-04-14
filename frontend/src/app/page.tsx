@@ -23,7 +23,10 @@ interface Result {
   elapsed_time: number
 }
 
-type Algorithm = 'sequential' | 'concurrent-java-stream' | 'concurrent-fork-join'
+type Algorithm =
+  | 'sequential'
+  | 'concurrent-java-stream'
+  | 'concurrent-fork-join'
 
 export default function Home() {
   const baseUrl = 'http://localhost:4000'
@@ -51,10 +54,19 @@ export default function Home() {
     formData.append('file', selectedFile)
 
     try {
-      const fetchUrl =
-        selectOption == 'sequential' ? `${baseUrl}/api/sequential` :
-                     'concurrent-java-stream' ? `${baseUrl}/api/concurrent/java-stream` :
-                     'concurrent-fork-join' ? `${baseUrl}/api/concurrent/fork-join` : ''
+      let fetchUrl
+
+      switch (selectOption) {
+        case 'sequential':
+          fetchUrl = `${baseUrl}/api/sequential`
+          break
+        case 'concurrent-java-stream':
+          fetchUrl = `${baseUrl}/api/concurrent/java-stream`
+          break
+        case 'concurrent-fork-join':
+          fetchUrl = `${baseUrl}/api/concurrent/fork-join`
+          break
+      }
 
       const response = await fetch(fetchUrl, {
         method: 'POST',
