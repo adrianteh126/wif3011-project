@@ -5,5 +5,5 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 public interface SequentialBOWService {
-    Map<String, Integer> sequentialWordMap(MultipartFile file);
+    Map<String, Object> sequentialWordMap(MultipartFile file);
 }

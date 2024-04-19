@@ -30,14 +30,7 @@ public class BOWController {
         if (!file.getOriginalFilename().toLowerCase().endsWith(".txt"))
             return ResponseEntity.badRequest().body("{\"error\": \"Invalid file format.\"}");
 
-        Timer timer = new Timer();
-        timer.start();
-        Map<String, Integer> wordMap = sequentialBOWService.sequentialWordMap(file);
-        timer.stop();
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("elapsed_time", timer.getElapsedTimeMillis());
-        body.put("data", wordMap);
+        Map<String, Object> body = sequentialBOWService.sequentialWordMap(file);
         return ResponseEntity.ok(body);
     }
 
