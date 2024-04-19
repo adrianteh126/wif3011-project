@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.wif3011.project.service.BagOfWordService;
 import org.wif3011.project.service.SecondConcurrentService;
-import org.wif3011.project.service.SecondConcurrentServiceImpl;
 import org.wif3011.project.service.SequentialBOWService;
 import org.wif3011.project.utility.ApiConstant;
 import org.wif3011.project.utility.Timer;
@@ -20,7 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class MyController {
+public class BOWController {
     private final SequentialBOWService sequentialBOWService;
     private final BagOfWordService bagOfWordService;
     private final SecondConcurrentService secondConcurrentService;
@@ -56,7 +55,7 @@ public class MyController {
     }
 
     @PostMapping(ApiConstant.FORK_JOIN_METHOD)
-    public ResponseEntity<Object> concurrentWordCount2(@RequestBody MultipartFile file){
+    public ResponseEntity<Object> concurrentWordCount2(@RequestBody MultipartFile file) {
         if (file.isEmpty()) return ResponseEntity.badRequest().body("{\"error\": \"File is empty.\"}");
         if (!file.getOriginalFilename().toLowerCase().endsWith(".txt"))
             return ResponseEntity.badRequest().body("{\"error\": \"Invalid file format.\"}");
