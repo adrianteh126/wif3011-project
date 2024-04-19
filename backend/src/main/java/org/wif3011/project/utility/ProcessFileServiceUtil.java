@@ -6,7 +6,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.stream.Stream;
 
@@ -27,14 +28,13 @@ public class ProcessFileServiceUtil {
     public Map<String, Integer> sequentialGenerateWordMap(String document) {
         try {
             String[] stopWords = Files.readString(STOP_WORD_FILE_PATH).split("\\s+");
-            Set<String> stopWordsSet = new HashSet<>(Arrays.asList(stopWords));
             Map<String, Integer> data = new HashMap<>();
 
             document = document.toLowerCase()
                     .replaceAll(WORD_WITH_APOSTROPHE_REGEX, " ")
-                    .replaceAll("\\b(" + String.join("|", stopWordsSet) + ")\\b", "")
+                    .replaceAll("\\b(" + String.join("|", stopWords) + ")\\b", "")
                     .trim();
-            String[] strs = document.split("\\s+");
+
             Stream.of(document.split("\\s+")).forEach((word) -> {
                 // update word map
                 data.compute(word, (key, value) -> value == null ? 1 : value + 1);
