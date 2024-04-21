@@ -6,4 +6,5 @@ import java.util.Map;
 
 public interface BagOfWordService {
     Map<String, Integer> concurrentWordCount1 (MultipartFile file);
+    Map<String, Integer> concurrentWordCount2 (MultipartFile file);
 }

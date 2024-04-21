@@ -8,6 +8,7 @@ import org.wif3011.project.service.BagOfWordService;
 import org.wif3011.project.service.SecondConcurrentService;
 import org.wif3011.project.service.SequentialBOWService;
 import org.wif3011.project.utility.ApiConstant;
+import org.wif3011.project.utility.ResponseManipulator;
 import org.wif3011.project.utility.Timer;
 
 import java.util.HashMap;
@@ -49,19 +50,21 @@ public class BOWController {
     }
 
     @PostMapping(ApiConstant.FORK_JOIN_METHOD)
-    public ResponseEntity<Object> concurrentWordCount2(@RequestBody MultipartFile file) {
+    public ResponseEntity<Object> concurrentWordCount2(@RequestBody MultipartFile file,
+                                                       @RequestParam("numOfWords") int numOfWords,
+                                                       @RequestParam("sortAscending") boolean sortAscending) {
         if (file.isEmpty()) return ResponseEntity.badRequest().body("{\"error\": \"File is empty.\"}");
         if (!file.getOriginalFilename().toLowerCase().endsWith(".txt"))
             return ResponseEntity.badRequest().body("{\"error\": \"Invalid file format.\"}");
 
         Timer timer = new Timer();
         timer.start();
-        Map<String, Integer> wordMap = secondConcurrentService.secondConcurrentWordMap(file);
+        Map<String, Integer> wordMap = bagOfWordService.concurrentWordCount2(file);
         timer.stop();
 
         Map<String, Object> body = new HashMap<>();
         body.put("elapsed_time", timer.getElapsedTimeMillis());
-        body.put("data", wordMap);
+        body.put("data", ResponseManipulator.sortAndLimit(wordMap, numOfWords, sortAscending));
         return ResponseEntity.ok(body);
     }
 }

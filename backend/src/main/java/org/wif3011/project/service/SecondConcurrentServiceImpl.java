@@ -17,11 +17,9 @@ public class SecondConcurrentServiceImpl implements SecondConcurrentService {
     private Map<String, Integer> wordMap;
 
     @Override
-    public Map<String, Integer> secondConcurrentWordMap(MultipartFile file) {
+    public Map<String, Integer> forkJoinMethod(String document) {
         // try with resource
         try{
-            String document = processFileUtil.convertFileToString(file);
-            document = processFileUtil.concurrentFilterDocs(document);
             wordMap = new HashMap<>();
             int numofThreads = Runtime.getRuntime().availableProcessors();
             String[] words = document.split("\\s+");
