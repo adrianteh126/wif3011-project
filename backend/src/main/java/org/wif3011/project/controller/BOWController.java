@@ -50,9 +50,6 @@ public class BOWController {
 
     @PostMapping(ApiConstant.FORK_JOIN_METHOD)
     public ResponseEntity<Object> concurrentWordCount2(@RequestBody MultipartFile file) {
-        if (file.isEmpty()) return ResponseEntity.badRequest().body("{\"error\": \"File is empty.\"}");
-        if (!file.getOriginalFilename().toLowerCase().endsWith(".txt"))
-            return ResponseEntity.badRequest().body("{\"error\": \"Invalid file format.\"}");
 
         Timer timer = new Timer();
         timer.start();
