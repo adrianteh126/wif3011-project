@@ -13,6 +13,7 @@ public class BagOfWordServiceImpl implements BagOfWordService{
 
     private final ProcessFileServiceUtil processFileUtil;
     private final ConcurrentService concurrentService;
+    private final SecondConcurrentService secondConcurrentService;
 
 
     @Override
@@ -23,4 +24,11 @@ public class BagOfWordServiceImpl implements BagOfWordService{
         return concurrentService.javaStreamMethod(document);
     }
 
+    @Override
+    public Map<String, Integer> concurrentWordCount2(MultipartFile file){
+        String document = processFileUtil.convertFileToString(file);
+        document = processFileUtil.concurrentFilterDocs(document);
+
+        return secondConcurrentService.forkJoinMethod(document);
+    }
 }

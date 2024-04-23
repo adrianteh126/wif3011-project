@@ -5,5 +5,5 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 public interface SecondConcurrentService {
-    Map<String, Integer> secondConcurrentWordMap (MultipartFile file);
+    Map<String, Integer> forkJoinMethod (String document);
 }
