@@ -5,47 +5,42 @@ import java.util.concurrent.RecursiveTask;
 
 public class WordCountTask extends RecursiveTask<Map<String, Integer>> {
     private final String[] words;
-    private final int current;
-    private final int chunkSize;
+    private final int start;
+    private final int end;
 
-    public WordCountTask(String[] words, int current, int chunkSize) {
+    private static final int THRESHOLD = 1000; // Adjust based on your benchmarking
+
+    public WordCountTask(String[] words, int start, int end) {
         this.words = words;
-        this.current = current;
-        this.chunkSize = chunkSize;
+        this.start = start;
+        this.end = end;
     }
 
     @Override
     protected Map<String, Integer> compute() {
-        List<WordCountTask> tasks = new ArrayList<>();
-        Map<String, Integer> wordCountMap = new HashMap<>();
-        String [] temp = new String[chunkSize];
-        try {
-            if(current + chunkSize >= words.length){
-                System.arraycopy(words, current, temp, 0, words.length - current);
+        int length = end - start;
+        if (length <= THRESHOLD) {
+            Map<String, Integer> localWordCount = new HashMap<>();
+            for (int i = start; i < end; i++) {
+                String word = words[i];
+                if (word != null && !word.isEmpty()) {
+                    String lowerCaseWord = word.toLowerCase(); // Convert word to lowercase
+                    localWordCount.merge(lowerCaseWord, 1, Integer::sum);
+                }
             }
-            else{
-                System.arraycopy(words, current, temp, 0, chunkSize);
-                tasks.add(new WordCountTask(words, current + chunkSize, chunkSize));
-            }
+            return localWordCount;
+        } else {
+            int mid = start + length / 2;
+            WordCountTask left = new WordCountTask(words, start, mid);
+            WordCountTask right = new WordCountTask(words, mid, end);
 
-            for (String word : temp) {
-                if(word == null){
-                    continue;
-                }
-                if (!word.isEmpty()) {
-                    wordCountMap.put(word, wordCountMap.getOrDefault(word, 0) + 1);
-                }
-            }
-            for (WordCountTask task : tasks) {
-                task.fork();
-            }
-            for (WordCountTask task : tasks) {
-                wordCountMap.putAll(task.join());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+            left.fork(); // Asynchronously execute the left task
+            Map<String, Integer> rightResult = right.compute(); // Compute the right part synchronously
+            Map<String, Integer> leftResult = left.join(); // Wait and retrieve the left result
+
+            // Efficient map merging
+            rightResult.forEach((key, value) -> leftResult.merge(key, value, Integer::sum));
+            return leftResult;
         }
-
-        return wordCountMap;
     }
 }
