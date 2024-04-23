@@ -20,7 +20,6 @@ import java.util.Map;
 public class BOWController {
     private final SequentialBOWService sequentialBOWService;
     private final BagOfWordService bagOfWordService;
-    private final SecondConcurrentService secondConcurrentService;
 
     @PostMapping(ApiConstant.SEQUENTIAL_BOW)
     public ResponseEntity<Object> getSequentialWordMap(
@@ -37,7 +36,9 @@ public class BOWController {
     }
 
     @PostMapping(ApiConstant.JAVA_STREAM_METHOD)
-    public ResponseEntity<Object> concurrentWordCount1(@RequestBody MultipartFile file) {
+    public ResponseEntity<Object> concurrentWordCount1(@RequestBody MultipartFile file,
+                                                       @RequestParam("numOfWords") int numOfWords,
+                                                       @RequestParam("sortAscending") boolean sortAscending) {
         Timer timer = new Timer();
         timer.start();
         Map<String, Integer> wordMap = bagOfWordService.concurrentWordCount1(file);
@@ -45,7 +46,7 @@ public class BOWController {
 
         Map<String, Object> body = new HashMap<>();
         body.put("elapsed_time", timer.getElapsedTimeMillis());
-        body.put("data", wordMap);
+        body.put("data", ResponseManipulator.sortAndLimit(wordMap, numOfWords, sortAscending));
         return ResponseEntity.ok(body);
     }
 

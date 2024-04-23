@@ -2,21 +2,16 @@ package org.wif3011.project.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import org.wif3011.project.utility.ProcessFileServiceUtil;
 import org.wif3011.project.utility.Timer;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class SecondConcurrentServiceImpl implements SecondConcurrentService {
 
-    private final ProcessFileServiceUtil processFileUtil;
     private Map<String, Integer> wordMap;
 
     @Override
