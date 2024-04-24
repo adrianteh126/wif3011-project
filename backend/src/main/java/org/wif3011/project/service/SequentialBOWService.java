@@ -6,4 +6,5 @@ import java.util.Map;
 
 public interface SequentialBOWService {
     Map<String, Object> sequentialWordMap(MultipartFile file, int numOfWords, boolean sortAscending);
+    Map<String, Integer> sequentialWordMapCompare(MultipartFile file);
 }
