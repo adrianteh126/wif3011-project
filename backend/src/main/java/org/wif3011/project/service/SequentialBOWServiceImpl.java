@@ -37,4 +37,12 @@ public class SequentialBOWServiceImpl implements SequentialBOWService {
         body.put("data", ResponseManipulator.sortAndLimit(data, numOfWords, sortAscending));
         return body;
     }
+
+    @Override
+    public Map<String, Integer> sequentialWordMapCompare(MultipartFile file){
+        String document = processFileUtil.convertFileToString(file);
+        Map<String, Integer> data = processFileUtil.sequentialGenerateWordMap(document);
+
+        return data;
+    }
 }

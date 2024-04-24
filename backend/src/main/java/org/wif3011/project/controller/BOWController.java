@@ -68,4 +68,40 @@ public class BOWController {
         body.put("data", ResponseManipulator.sortAndLimit(wordMap, numOfWords, sortAscending));
         return ResponseEntity.ok(body);
     }
+
+    @PostMapping(ApiConstant.COMPARISON_BOW)
+    public ResponseEntity<Object> comparisonBOW(@RequestBody MultipartFile file){
+        if (file.isEmpty()) return ResponseEntity.badRequest().body("{\"error\": \"File is empty.\"}");
+        if (!file.getOriginalFilename().toLowerCase().endsWith(".txt"))
+            return ResponseEntity.badRequest().body("{\"error\": \"Invalid file format.\"}");
+
+        Map<String, Object> body = new HashMap<>();
+        Map<String, Long> sequentialElapsedTime = new HashMap<>();
+        Map<String, Long> javaStreamElapsedTime = new HashMap<>();
+        Map<String, Long> forkJoinElapsedTime = new HashMap<>();
+
+        Timer timer = new Timer();
+        for(int i = 0; i < 3; i++){
+            timer.start();
+            sequentialBOWService.sequentialWordMapCompare(file);
+            timer.stop();
+            sequentialElapsedTime.put(String.format("elapsed_time_%1$s", i + 1), timer.getElapsedTimeMillis());
+        }
+        for(int i = 0; i < 3; i++){
+            timer.start();
+            bagOfWordService.concurrentWordCount1(file);
+            timer.stop();
+            javaStreamElapsedTime.put(String.format("elapsed_time_%1$s", i + 1), timer.getElapsedTimeMillis());
+        }
+        for(int i = 0; i < 3; i++){
+            timer.start();
+            bagOfWordService.concurrentWordCount2(file);
+            timer.stop();
+            forkJoinElapsedTime.put(String.format("elapsed_time_%1$s", i + 1), timer.getElapsedTimeMillis());
+        }
+        body.put("sequential", sequentialElapsedTime);
+        body.put("javaStream", javaStreamElapsedTime);
+        body.put("forkJoin", forkJoinElapsedTime);
+        return ResponseEntity.ok(body);
+    }
 }
