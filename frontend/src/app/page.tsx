@@ -203,9 +203,8 @@ export default function Home() {
       lineData.datasets.push({
         label: labels[i],
         data: [finalData[i], finalData[i + 1], finalData[i + 2]],
-        fill: true,
-        borderColor: colors[i],
-        backgroundColor: colors[i],
+        fill: false,
+        borderColor: colors[i]
       })
     }
     setIsComparisonLoading(false);

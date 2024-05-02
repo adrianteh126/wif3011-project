@@ -2,6 +2,7 @@ import React from 'react'
 import { Line } from 'react-chartjs-2'
 import { Chart, CategoryScale, LinearScale, PointElement, LineElement } from "chart.js"
 import type { ChartData, ChartOptions } from 'chart.js'
+import 'chart.js/auto';
 import ChartDataLabels from "chartjs-plugin-datalabels"
 
 interface LineProps {
