@@ -28,14 +28,17 @@ public class ProcessFileServiceUtil {
 
     public Map<String, Integer> sequentialGenerateWordMap(String document) {
         try {
+            // initial replace document sequentially
+            document = document.toLowerCase().replaceAll(WORD_WITH_APOSTROPHE_REGEX, " ");
+
+            // get the stop word from file sequentially
             String[] stopWords = Files.readString(STOP_WORD_FILE_PATH).split("\\s+");
+
+            // remove stop word sequentially
+            document = removeStopWords(document, stopWords);
+
+            // add words into word map sequentially
             Map<String, Integer> data = new HashMap<>();
-
-            document = document.toLowerCase()
-                    .replaceAll(WORD_WITH_APOSTROPHE_REGEX, " ")
-                    .replaceAll("\\b(" + String.join("|", stopWords) + ")\\b", "")
-                    .trim();
-
             Stream.of(document.split("\\s+")).forEach((word) -> {
                 // update word map
                 data.compute(word, (key, value) -> value == null ? 1 : value + 1);
@@ -72,7 +75,7 @@ public class ProcessFileServiceUtil {
             int wordsPerChunk = words.length / numThreads;
             int start = 0;
             for (int i = 0; i < numThreads; i++) {
-                int end = (i == numThreads - 1) ? words.length :start + wordsPerChunk ;
+                int end = (i == numThreads - 1) ? words.length : start + wordsPerChunk;
                 String chunk = String.join(" ", Arrays.copyOfRange(words, start, end));
                 Future<String> future = executor.submit(() -> removeStopWords(chunk, stopWords));
                 futures.add(future);
