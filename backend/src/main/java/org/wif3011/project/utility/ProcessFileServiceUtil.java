@@ -7,11 +7,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 @Service
@@ -49,93 +46,71 @@ public class ProcessFileServiceUtil {
         }
     }
 
-    /**
-     * This method using Completion Service which is more efficient and stable in handling large file
-     */
     public String concurrentFilterDocs(String document) {
-        Timer timer = new Timer();
-        timer.start();
+        try {
+            Timer timer = new Timer();
+            timer.start();
 
-        // initial replace document
-        document = document.replaceAll(WORD_WITH_APOSTROPHE_REGEX, " ");
+            // initial replace document
+            document = document.toLowerCase().replaceAll(WORD_WITH_APOSTROPHE_REGEX, " ");
 
-        // get the stop word from file concurrently
-        CompletableFuture<String[]> stopWordsFuture = CompletableFuture.supplyAsync(() -> {
-            try {
-                return Files.readString(STOP_WORD_FILE_PATH).split("\\s+");
-            } catch (IOException e) {
-                return new String[0];
-            }
-        });
-        String[] stopWords = stopWordsFuture.join();
-
-        int numThreads = Runtime.getRuntime().availableProcessors();
-        int batchSize = (int) Math.ceil((double) stopWords.length / numThreads);
-
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-        CompletionService<String> completionService = new ExecutorCompletionService<>(executor);
-
-        // based on the numThreads divide the stop word equally and submit to the completion service to run concurrently
-        for (int i = 0; i < stopWords.length; i += batchSize) {
-            int endIndex = Math.min(i + batchSize, stopWords.length);
-            String[] batchStopWords = Arrays.copyOfRange(stopWords, i, endIndex);
-
-            final String finalDocument = document;
-            completionService.submit(() -> {
-                String result = finalDocument;
-                for (String stopWord : batchStopWords) {
-                    result = result.replaceAll("\\b" + stopWord + "\\b", "");
+            // get the stop word from file concurrently
+            CompletableFuture<String[]> stopWordsFuture = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return Files.readString(STOP_WORD_FILE_PATH).split("\\s+");
+                } catch (IOException e) {
+                    return new String[0];
                 }
-                return result;
             });
-        }
+            String[] stopWords = stopWordsFuture.join();
 
-        // loop to get the last result in completion service after execute
-        StringBuilder resultBuilder = new StringBuilder(document);
-        for (int i = 0; i < stopWords.length / batchSize; i++) {
-            try {
-                Future<String> future = completionService.take();
-                String replaced = future.get();
-                resultBuilder = new StringBuilder(replaced);
-            } catch (InterruptedException | ExecutionException e) {
-                return null;
+            int numThreads = Runtime.getRuntime().availableProcessors();
+            ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+
+            List<Future<String>> futures = new ArrayList<>();
+            String[] words = document.split("\\s+");
+            int wordsPerChunk = words.length / numThreads;
+            int start = 0;
+            for (int i = 0; i < numThreads; i++) {
+                int end = (i == numThreads - 1) ? words.length :start + wordsPerChunk ;
+                String chunk = String.join(" ", Arrays.copyOfRange(words, start, end));
+                Future<String> future = executor.submit(() -> removeStopWords(chunk, stopWords));
+                futures.add(future);
+                start = end;
             }
+
+            StringBuilder resultBuilder = new StringBuilder();
+            for (Future<String> future : futures) {
+                resultBuilder.append(future.get());
+            }
+
+            executor.shutdown();
+            timer.stop();
+            log.info("Process file time: {}", timer.getElapsedTimeMillis());
+            return resultBuilder.toString();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return "";
         }
-
-        executor.shutdown();
-
-        timer.stop();
-        log.info("Process file time: {}", timer.getElapsedTimeMillis());
-        return resultBuilder.toString();
     }
 
     /**
-     * This method using atomic references which is more efficient in handling smaller file (stop word and text file)
+     * Remove stop words by chunk and return string
      */
-    private String atomicReferences(String document) {
-        Timer timer = new Timer();
-        timer.start();
-
-        document = document.replaceAll(WORD_WITH_APOSTROPHE_REGEX, " ");
-
-        try {
-            String[] stopWords = Files.readString(STOP_WORD_FILE_PATH).split("\\s+");
-            AtomicReference<String> result = new AtomicReference<>(document);
-
-            Arrays.stream(stopWords)
-                    .parallel()
-                    .forEach(stopWord -> {
-                        String currentResult = result.get();
-                        String replaced = currentResult.replaceAll("\\b" + stopWord + "\\b", "");
-                        result.set(replaced);
-                    });
-
-            timer.stop();
-            log.info("Process file time: {}", timer.getElapsedTimeMillis());
-            return result.get();
-
-        } catch (IOException e) {
-            return null;
+    private String removeStopWords(String text, String[] stopWords) {
+        StringBuilder resultBuilder = new StringBuilder();
+        for (String word : text.split("\\s+")) {
+            boolean isStopWord = false;
+            for (String stopWord : stopWords) {
+                if (word.equals(stopWord)) {
+                    isStopWord = true;
+                    break;
+                }
+            }
+            if (!isStopWord) {
+                resultBuilder.append(word).append(" ");
+            }
         }
+        return resultBuilder.toString();
     }
 }
