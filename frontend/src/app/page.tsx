@@ -19,12 +19,15 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { LineChart } from "@/components/ui/line-chart";
 import { ChartOptions } from "chart.js";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Result {
   data: {
     [key: string]: number;
   };
   elapsed_time: number;
+  algorithm_processing_time: number;
+  file_processing_time: number;
 }
 
 interface ComparisonResult {
@@ -121,6 +124,7 @@ export default function Home() {
       });
 
       const data = await response.json();
+      console.log(data)
 
       if (response.ok) {
         toast({ title: "✅ File uploaded successfully" });
@@ -221,7 +225,7 @@ export default function Home() {
           <CardHeader>
             <CardTitle>Upload File</CardTitle>
             <CardDescription>
-              Upload your .txt file here. Not exceeding 10mb.
+              Upload your .txt file here. Not exceeding 200mb.
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
@@ -305,9 +309,23 @@ export default function Home() {
             {data ? (
               <div className="flex flex-col ">
                 <div>
-                  <p>
-                    Elapsed Time: <strong> {data.elapsed_time} ms</strong>
-                  </p>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <p>
+                          Elapsed Time: <strong> {data.elapsed_time} ms</strong>
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          File Processing Time: <strong> {data.file_processing_time} ms</strong>
+                        </p>
+                        <p>
+                          Algorithm Processing Time: <strong> {data.algorithm_processing_time} ms</strong>
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 <div>
                   <p>Data: </p>

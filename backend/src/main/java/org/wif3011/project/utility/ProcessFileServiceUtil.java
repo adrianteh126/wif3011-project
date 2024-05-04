@@ -28,6 +28,8 @@ public class ProcessFileServiceUtil {
 
     public Map<String, Integer> sequentialGenerateWordMap(String document) {
         try {
+            Timer timer = new Timer();
+            timer.start();
             // initial replace document sequentially
             document = document.toLowerCase().replaceAll(WORD_WITH_APOSTROPHE_REGEX, " ");
 
@@ -36,7 +38,8 @@ public class ProcessFileServiceUtil {
 
             // remove stop word sequentially
             document = removeStopWords(document, stopWords);
-
+            timer.stop();
+            log.info("Process file time: {}", timer.getElapsedTimeMillis());
             // add words into word map sequentially
             Map<String, Integer> data = new HashMap<>();
             Stream.of(document.split("\\s+")).forEach((word) -> {
@@ -44,6 +47,20 @@ public class ProcessFileServiceUtil {
                 data.compute(word, (key, value) -> value == null ? 1 : value + 1);
             });
             return data;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String sequentialFilterDocs(String document){
+        try {
+            // initial replace document sequentially
+            document = document.toLowerCase().replaceAll(WORD_WITH_APOSTROPHE_REGEX, " ");
+            // get the stop word from file sequentially
+            String[] stopWords = Files.readString(STOP_WORD_FILE_PATH).split("\\s+");
+            // remove stop word sequentially
+            document = removeStopWords(document, stopWords);
+            return document;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

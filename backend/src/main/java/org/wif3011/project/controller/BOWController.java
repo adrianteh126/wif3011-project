@@ -39,14 +39,18 @@ public class BOWController {
     public ResponseEntity<Object> concurrentWordCount1(@RequestBody MultipartFile file,
                                                        @RequestParam("numOfWords") int numOfWords,
                                                        @RequestParam("sortAscending") boolean sortAscending) {
+        if (file.isEmpty()) return ResponseEntity.badRequest().body("{\"error\": \"File is empty.\"}");
+        if (!file.getOriginalFilename().toLowerCase().endsWith(".txt"))
+            return ResponseEntity.badRequest().body("{\"error\": \"Invalid file format.\"}");
+
+        // total process time
         Timer timer = new Timer();
         timer.start();
-        Map<String, Integer> wordMap = bagOfWordService.concurrentWordCount1(file);
+        Map<String, Object> body = bagOfWordService.concurrentWordCount1(file);
         timer.stop();
-
-        Map<String, Object> body = new HashMap<>();
         body.put("elapsed_time", timer.getElapsedTimeMillis());
-        body.put("data", ResponseManipulator.sortAndLimit(wordMap, numOfWords, sortAscending));
+
+        body.put("data", ResponseManipulator.sortAndLimit((Map<String, Integer>) body.get("data"), numOfWords, sortAscending));
         return ResponseEntity.ok(body);
     }
 
@@ -58,14 +62,14 @@ public class BOWController {
         if (!file.getOriginalFilename().toLowerCase().endsWith(".txt"))
             return ResponseEntity.badRequest().body("{\"error\": \"Invalid file format.\"}");
 
+        // total process time
         Timer timer = new Timer();
         timer.start();
-        Map<String, Integer> wordMap = bagOfWordService.concurrentWordCount2(file);
+        Map<String, Object> body = bagOfWordService.concurrentWordCount2(file);
         timer.stop();
-
-        Map<String, Object> body = new HashMap<>();
         body.put("elapsed_time", timer.getElapsedTimeMillis());
-        body.put("data", ResponseManipulator.sortAndLimit(wordMap, numOfWords, sortAscending));
+
+        body.put("data", ResponseManipulator.sortAndLimit((Map<String, Integer>) body.get("data"), numOfWords, sortAscending));
         return ResponseEntity.ok(body);
     }
 
