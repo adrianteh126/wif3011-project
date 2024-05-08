@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { LineChart } from "@/components/ui/line-chart";
+import WordCloudComponent from "@/components/ui/word-cloud";
 import { ChartOptions } from "chart.js";
 
 interface Result {
@@ -64,6 +65,11 @@ type Comparison = {
   )[];
 };
 
+type WordCloud = {
+  text: string;
+  value: number;
+};
+
 export default function Home() {
   const baseUrl = "http://localhost:4000";
   const { toast } = useToast();
@@ -81,6 +87,8 @@ export default function Home() {
   const [comparison, setComparison] = useState<Comparison>({} as Comparison);
   const [isComparisonLoading, setIsComparisonLoading] = useState(false); // handleComparison loading indicator
   const [comparisonData, setComparisonData] = useState<ComparisonResult>({} as ComparisonResult)
+
+  const [wordCloudData, setWordCloudData] = useState<WordCloud[]>([]);
 
   const handleFileChange = (event: any) => {
     setSelectedFile(event.target.files[0]);
@@ -213,6 +221,12 @@ export default function Home() {
     setComparison(lineData);
   }, [comparisonData])
 
+  useEffect(() => {
+    const wordCloudWords = Object.entries(data?.data || {})
+                                 .map(([text, value]) => ({text, value}));
+    setWordCloudData(wordCloudWords);
+  }, [data]);
+
   return (
     <main className="container flex flex-col justify-center items-center min-h-dvh">
       <div className="w-2/3 py-8">
@@ -321,6 +335,9 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
+                </div>
+                <div>
+                  <WordCloudComponent words={wordCloudData} />
                 </div>
               </div>
             ) : (
