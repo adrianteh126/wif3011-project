@@ -9,6 +9,7 @@ import org.wif3011.project.utility.Timer;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -19,20 +20,27 @@ public class SequentialBOWServiceImpl implements SequentialBOWService {
     @Override
     public Map<String, Object> sequentialWordMap(MultipartFile file, int numOfWords, boolean sortAscending) {
         long totalElapsedTime = 0;
+        Map<String, Object> body = new HashMap<>();
         Timer timer = new Timer();
 
         timer.start();
         String document = processFileUtil.convertFileToString(file);
+        document = processFileUtil.sequentialFilterDocs(document);
         timer.stop();
         totalElapsedTime += timer.getElapsedTimeMillis();
-
+        body.put("file_processing_time", timer.getElapsedTimeMillis());
 
         timer.start();
-        Map<String, Integer> data = processFileUtil.sequentialGenerateWordMap(document);
+        // add words into word map sequentially
+        Map<String, Integer> data = new HashMap<>();
+        Stream.of(document.split("\\s+")).forEach((word) -> {
+            // update word map
+            data.compute(word, (key, value) -> value == null ? 1 : value + 1);
+        });
         timer.stop();
         totalElapsedTime += timer.getElapsedTimeMillis();
+        body.put("algorithm_processing_time", timer.getElapsedTimeMillis());
 
-        Map<String, Object> body = new HashMap<>();
         body.put("elapsed_time", totalElapsedTime);
         body.put("data", ResponseManipulator.sortAndLimit(data, numOfWords, sortAscending));
         return body;
