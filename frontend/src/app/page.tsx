@@ -21,6 +21,7 @@ import { LineChart } from "@/components/ui/line-chart";
 import WordCloudComponent from "@/components/ui/word-cloud";
 import { ChartOptions } from "chart.js";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Result {
   data: {
@@ -342,19 +343,29 @@ export default function Home() {
                   </TooltipProvider>
                 </div>
                 <div>
-                  <p>Data: </p>
-                  <div className="ps-6 grid grid-cols-5">
-                    {Object.entries(data.data).map(([key, value]) => (
-                      <div key={key}>
-                        <p className="truncate">
-                          &quot;<strong>{key}</strong>&quot;: {value}
-                        </p>
+                  <Tabs defaultValue="wordCloud">
+                    <div className="flex justify-end">
+                      <TabsList>
+                        <TabsTrigger value="wordCloud">Word Cloud</TabsTrigger>
+                        <TabsTrigger value="list">List</TabsTrigger>
+                      </TabsList>
+                    </div>
+                    <TabsContent value="wordCloud">
+                      <WordCloudComponent words={wordCloudData} />
+                    </TabsContent>
+                    <TabsContent value="list">
+                      <p>Data: </p>
+                      <div className="ps-6 grid grid-cols-5">
+                        {Object.entries(data.data).map(([key, value]) => (
+                          <div key={key}>
+                            <p className="truncate">
+                              &quot;<strong>{key}</strong>&quot;: {value}
+                            </p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <WordCloudComponent words={wordCloudData} />
+                    </TabsContent>
+                  </Tabs>
                 </div>
               </div>
             ) : (
