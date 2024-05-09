@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class ProcessFileServiceUtil {
 
-    private final Path STOP_WORD_FILE_PATH = Path.of("C:/Users/junbi/.vscode/wif3011-project/backend/src/main/resources/stop-words.txt");
+    private final Path STOP_WORD_FILE_PATH = Path.of("src/main/resources/stop-words.txt");
     private final String WORD_WITH_APOSTROPHE_REGEX = "[^a-zA-Z']+|(?<![a-zA-Z])'|'(?![a-zA-Z])";
 
     public String convertFileToString(MultipartFile file) {
