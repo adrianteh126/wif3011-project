@@ -1,247 +1,181 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { LineMdLoadingTwotoneLoop } from "@/components/icon/LineMdLoadingTwotoneLoop";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { LineChart } from "@/components/ui/line-chart";
-import WordCloudComponent from "@/components/ui/word-cloud";
-import { ChartOptions } from "chart.js";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useEffect, useState } from 'react';
 
-interface Result {
-  data: {
-    [key: string]: number;
-  };
-  elapsed_time: number;
-  algorithm_processing_time: number;
-  file_processing_time: number;
-}
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
+import { LineMdLoadingTwotoneLoop } from '@/components/icon/LineMdLoadingTwotoneLoop';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { LineChart } from '@/components/ui/line-chart';
+import WordCloudComponent from '@/components/ui/word-cloud';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-interface ComparisonResult {
-  sequential: {
-    [key: string]: number;
-  }
-  javaStream: {
-    [key: string]: number;
-  }
-  forkJoin: {
-    [key: string]: number;
-  }
-}
-
-type Algorithm =
-  | "sequential"
-  | "concurrent-java-stream"
-  | "concurrent-fork-join";
-
-type Comparison = {
-  labels: string[];
-  datasets: (
-    | {
-        label: string;
-        data: number[];
-        fill: boolean;
-        backgroundColor: string;
-        borderColor: string;
-      }
-    | {
-        label: string;
-        data: number[];
-        fill: boolean;
-        borderColor: string;
-        backgroundColor?: undefined;
-      }
-  )[];
-};
-
-type WordCloud = {
-  text: string;
-  value: number;
-};
+import { Result, ComparisonResult, Algorithm, Comparison, WordCloud } from '@/types';
 
 export default function Home() {
-  const baseUrl = "http://localhost:4000";
+  const baseUrl = 'http://localhost:4000';
   const { toast } = useToast();
-  // ui
-  const [selectedFile, setSelectedFile] = useState(null); // user select file
-  const [isLoading, setIsLoading] = useState(false); // handleSubmit loading indicator
-  // fetch api
-  const [data, setData] = useState<Result>(); // data fetched from request
-  const [selectOption, setSelectedOption] = useState<Algorithm>("sequential"); // fetch api select options
-  // query params: result query
-  const [isAscending, setIsAscending] = useState(false); // sorting, default: descending
-  const [numOfWords, setNumOfWords] = useState(50); // return numOfWords, default: 50
 
+  // UI state
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isCompare, setIsCompare] = useState(false);
-  const [comparison, setComparison] = useState<Comparison>({} as Comparison);
-  const [isComparisonLoading, setIsComparisonLoading] = useState(false); // handleComparison loading indicator
-  const [comparisonData, setComparisonData] = useState<ComparisonResult>({} as ComparisonResult)
+  const [isComparisonLoading, setIsComparisonLoading] = useState(false);
 
+  // Data state
+  const [data, setData] = useState<Result>();
+  const [comparisonData, setComparisonData] = useState<ComparisonResult>({} as ComparisonResult);
+  const [comparison, setComparison] = useState<Comparison>({} as Comparison);
   const [wordCloudData, setWordCloudData] = useState<WordCloud[]>([]);
 
+  // Query parameters
+  const [selectOption, setSelectedOption] = useState<Algorithm>('sequential');
+  const [isAscending, setIsAscending] = useState(false);
+  const [numOfWords, setNumOfWords] = useState(50);
+
+  // Handle file change event
   const handleFileChange = (event: any) => {
-    setSelectedFile(event.target.files[0]);
+    if (event.target.files) {
+      setSelectedFile(event.target.files[0]);
+    }
   };
 
-  const handleSubmit = async (event: any) => {
+  // Handle form submission
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setIsCompare(false);
     setIsLoading(true);
-    event.preventDefault();
 
     if (!selectedFile) {
-      toast({ title: "💡 Please select a file" });
-      return setIsLoading(false);
+      toast({ title: '💡 Please select a file' });
+      setIsLoading(false);
+      return;
     }
 
-    // request body: upload file
     const formData = new FormData();
-    formData.append("file", selectedFile);
+    formData.append('file', selectedFile);
 
     try {
-      let fetchUrl;
-
-      switch (selectOption) {
-        case "sequential":
-          fetchUrl = `${baseUrl}/api/sequential?numOfWords=${numOfWords}&sortAscending=${isAscending}`;
-          break;
-        case "concurrent-java-stream":
-          fetchUrl = `${baseUrl}/api/concurrent/java-stream?numOfWords=${numOfWords}&sortAscending=${isAscending}`;
-          break;
-        case "concurrent-fork-join":
-          fetchUrl = `${baseUrl}/api/concurrent/fork-join?numOfWords=${numOfWords}&sortAscending=${isAscending}`;
-          break;
-      }
-
+      const fetchUrl = `${baseUrl}/api/${selectOption}?numOfWords=${numOfWords}&sortAscending=${isAscending}`;
       const response = await fetch(fetchUrl, {
-        method: "POST",
-        body: formData,
+        method: 'POST',
+        body: formData
       });
 
-      const data = await response.json();
-      console.log(data)
+      const result = await response.json();
 
       if (response.ok) {
-        toast({ title: "✅ File uploaded successfully" });
-        setData(data);
+        toast({ title: '✅ File uploaded successfully' });
+        setData(result);
       } else {
-        toast({ title: "❌ Failed to upload file", description: data.error });
+        toast({ title: '❌ Failed to upload file', description: result.error });
       }
     } catch (error) {
-      console.error("Error uploading file:", error);
-      toast({
-        title: "❌ Failed to upload file",
-        description: String(error),
-      });
+      console.error('Error uploading file:', error);
+      toast({ title: '❌ Failed to upload file', description: String(error) });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
+  // Handle option change event
   const handleOptionChange = (value: Algorithm) => {
     setSelectedOption(value);
   };
 
+  // Handle sort change event
   const handleSortChange = (value: boolean) => {
     setIsAscending(value);
   };
 
+  // Handle number of words change event
   const handleNumOfWordsChange = (value: number[]) => {
     setNumOfWords(value[0]);
   };
 
-  const compareAlgo = async () => {
+  // Handle comparison algorithm
+  const handleCompareAlgo = async () => {
     if (!selectedFile) {
-      toast({ title: "💡 Please select a file" });
+      toast({ title: '💡 Please select a file' });
       return setIsLoading(false);
     }
 
-    // request body: upload file
     const formData = new FormData();
-    formData.append("file", selectedFile);
-    setIsComparisonLoading(true)
+    formData.append('file', selectedFile);
+    setIsComparisonLoading(true);
 
     try {
-      let fetchUrl = `${baseUrl}/api/comparison`;
+      const fetchUrl = `${baseUrl}/api/comparison`;
       const response = await fetch(fetchUrl, {
-        method: "POST",
-        body: formData,
+        method: 'POST',
+        body: formData
       });
-      const data = await response.json();
+
+      const result = await response.json();
 
       if (response.ok) {
-        toast({ title: "✅ File uploaded successfully" });
-        setComparisonData(data)
+        toast({ title: '✅ File uploaded successfully' });
+        setComparisonData(result);
       } else {
-        toast({ title: "❌ Failed to upload file", description: data.error });
+        toast({ title: '❌ Failed to upload file', description: result.error });
       }
     } catch (error) {
-      console.error("Error uploading file:", error);
-      toast({
-        title: "❌ Failed to upload file",
-        description: String(error),
-      });
+      console.error('Error uploading file:', error);
+      toast({ title: '❌ Failed to upload file', description: String(error) });
+    } finally {
+      setIsComparisonLoading(false);
     }
   };
 
+  // Update comparison data on change
   useEffect(() => {
-    if(!Object.keys(comparisonData).length){
-      return
-    }
-    const lineData : Comparison = {
-      labels: ["T1", "T2", "T3"],
-      datasets: [],
+    if (!Object.keys(comparisonData).length) return;
+
+    const lineData: Comparison = {
+      labels: ['T1', 'T2', 'T3'],
+      datasets: []
     };
-    const labels = Object.keys(comparisonData)
-    const sequentialData = Object.values(comparisonData.sequential);
-    const javaStreamData = Object.values(comparisonData.javaStream);
-    const forkJoinData = Object.values(comparisonData.forkJoin);
-    let finalData : number[] = [];
-    const colors = ["#10439F", "#874CCC", "C65BCF"];
-    finalData = finalData.concat(sequentialData, javaStreamData, forkJoinData)
-    for(let i = 0; i < 3; i++){
+
+    const labels = Object.keys(comparisonData);
+    const colors = ['#10439F', '#874CCC', '#C65BCF'];
+
+    [comparisonData.sequential, comparisonData.javaStream, comparisonData.forkJoin].forEach((data, i) => {
       lineData.datasets.push({
         label: labels[i],
-        data: [finalData[i], finalData[i + 1], finalData[i + 2]],
+        data: Object.values(data),
         fill: false,
         borderColor: colors[i]
-      })
-    }
-    setIsComparisonLoading(false);
-    setIsCompare(true)
-    setComparison(lineData);
-  }, [comparisonData])
+      });
+    });
 
+    setComparison(lineData);
+    setIsCompare(true);
+  }, [comparisonData]);
+
+  // Update word cloud data on data change
   useEffect(() => {
-    const wordCloudWords = Object.entries(data?.data || {})
-                                 .map(([text, value]) => ({text, value}));
+    const wordCloudWords = Object.entries(data?.data || {}).map(([text, value]) => ({ text, value }));
     setWordCloudData(wordCloudWords);
   }, [data]);
 
   return (
     <main className="container flex flex-col justify-center items-center min-h-dvh">
       <div className="w-2/3 py-8">
+        {/* Title */}
         <div className="text-4xl font-bold">Bag-of-Words Generator</div>
         <br />
+
+        {/* Card */}
         <Card>
           <CardHeader>
             <CardTitle>Upload File</CardTitle>
-            <CardDescription>
-              Upload your .txt file here. Not exceeding 200mb.
-            </CardDescription>
+            <CardDescription>Upload your .txt file here. Not exceeding 200mb.</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="flex flex-col gap-6">
@@ -249,31 +183,18 @@ export default function Home() {
                 <Label htmlFor="text-file">Text File</Label>
                 <Input id="text-file" type="file" onChange={handleFileChange} />
               </div>
-              <RadioGroup
-                defaultValue="sequential"
-                onValueChange={handleOptionChange}
-              >
+              <RadioGroup defaultValue="sequential" onValueChange={handleOptionChange}>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="sequential" id="option-sequential" />
                   <Label htmlFor="option-sequential">Sequential</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem
-                    value="concurrent-java-stream"
-                    id="option-concurrent"
-                  />
-                  <Label htmlFor="option-concurrent">
-                    Concurrent / JavaStream
-                  </Label>
+                  <RadioGroupItem value="concurrent-java-stream" id="option-concurrent" />
+                  <Label htmlFor="option-concurrent">Concurrent / JavaStream</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem
-                    value="concurrent-fork-join"
-                    id="option-concurrent-2"
-                  />
-                  <Label htmlFor="option-concurrent-2">
-                    Concurrent / ForkJoin
-                  </Label>
+                  <RadioGroupItem value="concurrent-fork-join" id="option-concurrent-2" />
+                  <Label htmlFor="option-concurrent-2">Concurrent / ForkJoin</Label>
                 </div>
               </RadioGroup>
               <div className="flex items-center space-x-2">
@@ -301,13 +222,7 @@ export default function Home() {
                   </div>
                 )}
               </Button>
-              <Button
-                type="button"
-                disabled={isLoading}
-                onClick={() => {
-                  compareAlgo()
-                }}
-              >
+              <Button type="button" disabled={isLoading} onClick={handleCompareAlgo}>
                 Compare
                 {isComparisonLoading && (
                   <div className="ps-3">
@@ -319,10 +234,12 @@ export default function Home() {
           </form>
         </Card>
         <br />
+
+        {/* Result */}
         {!isCompare ? (
           <div>
             {data ? (
-              <div className="flex flex-col ">
+              <div className="flex flex-col">
                 <div>
                   <TooltipProvider>
                     <Tooltip>
@@ -354,7 +271,7 @@ export default function Home() {
                       <WordCloudComponent words={wordCloudData} />
                     </TabsContent>
                     <TabsContent value="list">
-                      <p>Data: </p>
+                      <p>Data:</p>
                       <div className="ps-6 grid grid-cols-5">
                         {Object.entries(data.data).map(([key, value]) => (
                           <div key={key}>
