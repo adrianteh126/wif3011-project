@@ -4,4 +4,5 @@ import java.util.Map;
 
 public interface ConcurrentService {
     Map<String, Integer> javaStreamMethod(String document);
+    Map<String, Integer> forkJoinMethod (String document);
 }

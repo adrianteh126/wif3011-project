@@ -15,8 +15,6 @@ public class BagOfWordServiceImpl implements BagOfWordService{
 
     private final ProcessFileServiceUtil processFileUtil;
     private final ConcurrentService concurrentService;
-    private final SecondConcurrentService secondConcurrentService;
-
 
     @Override
     public Map<String, Object> concurrentWordCount1(MultipartFile file) {
@@ -61,7 +59,7 @@ public class BagOfWordServiceImpl implements BagOfWordService{
 
         // Algorithm Process Time
         timer.start();
-        Map<String, Integer> data = secondConcurrentService.forkJoinMethod(document);
+        Map<String, Integer> data = concurrentService.forkJoinMethod(document);
         timer.stop();
         totalElapsedTime += timer.getElapsedTimeMillis();
         body.put("algorithm_processing_time", timer.getElapsedTimeMillis());

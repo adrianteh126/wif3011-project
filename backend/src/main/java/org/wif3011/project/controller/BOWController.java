@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.wif3011.project.service.BagOfWordService;
-import org.wif3011.project.service.SecondConcurrentService;
 import org.wif3011.project.service.SequentialBOWService;
 import org.wif3011.project.utility.ApiConstant;
 import org.wif3011.project.utility.ResponseManipulator;
