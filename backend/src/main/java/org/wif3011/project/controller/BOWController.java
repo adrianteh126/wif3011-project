@@ -5,8 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.wif3011.project.service.BagOfWordService;
-import org.wif3011.project.service.SecondConcurrentService;
-import org.wif3011.project.service.SequentialBOWService;
+import org.wif3011.project.service.SequentialService;
 import org.wif3011.project.utility.ApiConstant;
 import org.wif3011.project.utility.ResponseManipulator;
 import org.wif3011.project.utility.Timer;
@@ -18,20 +17,27 @@ import java.util.Map;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class BOWController {
-    private final SequentialBOWService sequentialBOWService;
+    private final SequentialService sequentialService;
     private final BagOfWordService bagOfWordService;
 
     @PostMapping(ApiConstant.SEQUENTIAL_BOW)
     public ResponseEntity<Object> getSequentialWordMap(
+            @RequestBody MultipartFile file,
             @RequestParam("numOfWords") int numOfWords,
-            @RequestParam("sortAscending") boolean sortAscending,
-            @RequestBody MultipartFile file) {
-
+            @RequestParam("sortAscending") boolean sortAscending
+    ) {
         if (file.isEmpty()) return ResponseEntity.badRequest().body("{\"error\": \"File is empty.\"}");
         if (!file.getOriginalFilename().toLowerCase().endsWith(".txt"))
             return ResponseEntity.badRequest().body("{\"error\": \"Invalid file format.\"}");
 
-        Map<String, Object> body = sequentialBOWService.sequentialWordMap(file, numOfWords, sortAscending);
+        // total process time
+        Timer timer = new Timer();
+        timer.start();
+        Map<String, Object> body = bagOfWordService.sequentialWordCount(file);
+        timer.stop();
+        body.put("elapsed_time", timer.getElapsedTimeMillis());
+
+        body.put("data", ResponseManipulator.sortAndLimit((Map<String, Integer>) body.get("data"), numOfWords, sortAscending));
         return ResponseEntity.ok(body);
     }
 
@@ -74,7 +80,7 @@ public class BOWController {
     }
 
     @PostMapping(ApiConstant.COMPARISON_BOW)
-    public ResponseEntity<Object> comparisonBOW(@RequestBody MultipartFile file){
+    public ResponseEntity<Object> comparisonBOW(@RequestBody MultipartFile file) {
         if (file.isEmpty()) return ResponseEntity.badRequest().body("{\"error\": \"File is empty.\"}");
         if (!file.getOriginalFilename().toLowerCase().endsWith(".txt"))
             return ResponseEntity.badRequest().body("{\"error\": \"Invalid file format.\"}");
@@ -85,19 +91,19 @@ public class BOWController {
         Map<String, Long> forkJoinElapsedTime = new HashMap<>();
 
         Timer timer = new Timer();
-        for(int i = 0; i < 3; i++){
+        for (int i = 0; i < 3; i++) {
             timer.start();
-            sequentialBOWService.sequentialWordMapCompare(file);
+            sequentialService.sequentialWordMapCompare(file);
             timer.stop();
             sequentialElapsedTime.put(String.format("elapsed_time_%1$s", i + 1), timer.getElapsedTimeMillis());
         }
-        for(int i = 0; i < 3; i++){
+        for (int i = 0; i < 3; i++) {
             timer.start();
             bagOfWordService.concurrentWordCount1(file);
             timer.stop();
             javaStreamElapsedTime.put(String.format("elapsed_time_%1$s", i + 1), timer.getElapsedTimeMillis());
         }
-        for(int i = 0; i < 3; i++){
+        for (int i = 0; i < 3; i++) {
             timer.start();
             bagOfWordService.concurrentWordCount2(file);
             timer.stop();
