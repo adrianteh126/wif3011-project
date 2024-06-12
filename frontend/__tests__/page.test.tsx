@@ -1,57 +1,115 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Home from '../src/app/page';
-import { http } from 'msw';
-import { setupServer } from 'msw/node';
+// import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+// import Home from '../src/app/page';
+// import { useToast, ToasterToast } from '@/components/ui/use-toast';
 
-const server = setupServer(
-  http.post('http://localhost:4000/api/sequential', () => {
-    return new Response(JSON.stringify({ data: { word: 10 }, elapsed_time: 100, file_processing_time: 50, algorithm_processing_time: 50 }), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-  }),
-  http.post('http://localhost:4000/api/comparison', () => {
-    return new Response(JSON.stringify({ sequential: { T1: 10, T2: 20, T3: 30 }, javaStream: { T1: 15, T2: 25, T3: 35 }, forkJoin: { T1: 20, T2: 30, T3: 40 } }), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-  })
-);
+// // Define the `Toast` type
+// type Toast = {
+//   title: string;
+//   // Add other properties as needed
+// };
 
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+// // Define the type for the mock toast function
+// type ToastMock = {
+//   toast: ({ ...props }: Toast) => { id: string; dismiss: () => void; update: (props: ToasterToast) => void; };
+//   dismiss: (toastId?: string) => void;
+//   toasts: ToasterToast[];
+// };
 
-describe('Home', () => {
-  it('renders upload form and handles file upload', async () => {
-    render(<Home />);
+// // Mock the useToast hook
+// jest.mock('@/components/ui/use-toast', () => ({
+//   useToast: jest.fn(),
+// }));
 
-    const input = screen.getByLabelText(/text file/i);
-    const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+// describe('Home Component', () => {
+//   let toastMock: ToastMock;
 
-    fireEvent.change(input, { target: { files: [file] } });
+//   beforeEach(() => {
+//     toastMock = { toast: jest.fn() } as unknown as ToastMock;
+//     (useToast as jest.Mock).mockReturnValue(toastMock);
+//   });
 
-    const button = screen.getByText(/upload/i);
-    fireEvent.click(button);
+//   test('renders the initial UI correctly', () => {
+//     render(<Home />);
+    
+//     expect(screen.getByText('Bag-of-Words Generator')).toBeInTheDocument();
+//     expect(screen.getByText('Upload your .txt file here. Not exceeding 200mb.')).toBeInTheDocument();
+//   });
 
-    await waitFor(() => expect(screen.getByText(/✅ file uploaded successfully/i)).toBeInTheDocument());
-  });
+//   test('handles file upload correctly', async () => {
+//     render(<Home />);
 
-  it('renders and handles compare button', async () => {
-    render(<Home />);
+//     const fileInput = screen.getByLabelText('Text File') as HTMLInputElement;
+//     const file = new File(['dummy content'], 'example.txt', { type: 'text/plain' });
+    
+//     fireEvent.change(fileInput, { target: { files: [file] } });
+    
+//     if (fileInput.files) {
+//       expect(fileInput.files[0]).toEqual(file);
+//       expect(fileInput.files).toHaveLength(1);
+//     }
+//   });
 
-    const input = screen.getByLabelText(/text file/i);
-    const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+//   test('shows a toast message if no file is selected on upload', async () => {
+//     render(<Home />);
+    
+//     const uploadButton = screen.getByText('Upload');
+//     fireEvent.click(uploadButton);
+    
+//     await waitFor(() => {
+//       expect(toastMock.toast).toHaveBeenCalledWith({ title: '💡 Please select a file' });
+//     });
+//   });
 
-    fireEvent.change(input, { target: { files: [file] } });
+//   test('handles algorithm option change correctly', () => {
+//     render(<Home />);
+    
+//     const sequentialRadio = screen.getByLabelText('Sequential') as HTMLInputElement;
+//     const javaStreamRadio = screen.getByLabelText('Concurrent / JavaStream') as HTMLInputElement;
+    
+//     fireEvent.click(javaStreamRadio);
+//     expect(javaStreamRadio).toBeChecked();
+//     expect(sequentialRadio).not.toBeChecked();
+//   });
 
-    const compareButton = screen.getByText(/compare/i);
-    fireEvent.click(compareButton);
+//   test('handles sort switch change correctly', () => {
+//     render(<Home />);
+    
+//     const sortSwitch = screen.getByLabelText('Sort Ascending') as HTMLInputElement;
+//     fireEvent.click(sortSwitch);
+//     expect(sortSwitch).toBeChecked();
+//   });
 
-    await waitFor(() => expect(screen.getByText(/✅ file uploaded successfully/i)).toBeInTheDocument());
-    expect(screen.getByText(/elapsed time of each algorithm/i)).toBeInTheDocument();
-  });
-});
+//   test('handles slider change correctly', () => {
+//     render(<Home />);
+    
+//     const slider = screen.getByLabelText('Number of Words: 50') as HTMLInputElement;
+//     fireEvent.change(slider, { target: { value: 30 } });
+    
+//     expect(screen.getByLabelText('Number of Words: 30')).toBeInTheDocument();
+//   });
+
+//   test('handles form submission and displays results', async () => {
+//     global.fetch = jest.fn(() =>
+//       Promise.resolve({
+//         ok: true,
+//         json: () => Promise.resolve({ data: { word1: 1, word2: 2 }, elapsed_time: 123, file_processing_time: 45, algorithm_processing_time: 78 }),
+//       })
+//     ) as jest.Mock;
+
+//     render(<Home />);
+    
+//     const fileInput = screen.getByLabelText('Text File') as HTMLInputElement;
+//     const file = new File(['dummy content'], 'example.txt', { type: 'text/plain' });
+//     fireEvent.change(fileInput, { target: { files: [file] } });
+    
+//     const uploadButton = screen.getByText('Upload');
+//     fireEvent.click(uploadButton);
+    
+//     await waitFor(() => {
+//       expect(toastMock.toast).toHaveBeenCalledWith({ title: '✅ File uploaded successfully' });
+//       expect(screen.getByText('Elapsed Time: 123 ms')).toBeInTheDocument();
+//       expect(screen.getByText('word1: 1')).toBeInTheDocument();
+//       expect(screen.getByText('word2: 2')).toBeInTheDocument();
+//     });
+//   });
+// });

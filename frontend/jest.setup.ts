@@ -10,3 +10,4 @@ global.window.matchMedia = jest.fn().mockImplementation(query => ({
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   }));
+  
