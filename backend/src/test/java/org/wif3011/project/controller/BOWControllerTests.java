@@ -11,13 +11,12 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.wif3011.project.service.BagOfWordService;
-import org.wif3011.project.service.SequentialBOWService;
+import org.wif3011.project.service.SequentialService;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
@@ -29,7 +28,7 @@ class BOWControllerTests {
     private MockMvc mockMvc;
 
     @MockBean
-    private SequentialBOWService sequentialBOWService;
+    private SequentialService sequentialService;
 
     @MockBean
     private BagOfWordService bagOfWordService;
@@ -44,16 +43,19 @@ class BOWControllerTests {
     @Test
     void testGetSequentialWordMap() throws Exception {
         Map<String, Object> response = new HashMap<>();
-        response.put("data", "some data");
-        Mockito.when(sequentialBOWService.sequentialWordMap(Mockito.any(), Mockito.anyInt(), Mockito.anyBoolean()))
-                .thenReturn(response);
+        Map<String, Integer> data = new HashMap<>();
+        data.put("word", 1);
+        response.put("data", data);
+        response.put("elapsed_time", 3); // Example time
+
+        Mockito.when(bagOfWordService.sequentialWordCount(Mockito.any())).thenReturn(response);
 
         mockMvc.perform(multipart("/api/sequential")
                         .file(validFile)
                         .param("numOfWords", "10")
                         .param("sortAscending", "true"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("{\"data\":\"some data\"}"));
+                .andExpect(content().json("{\"data\":{\"word\":1}, \"elapsed_time\":3}"));
     }
 
     @Test
@@ -124,21 +126,21 @@ class BOWControllerTests {
     void testComparisonBOW() throws Exception {
         Map<String, Object> response = new HashMap<>();
         Map<String, Long> elapsedTime = new HashMap<>();
-        elapsedTime.put("elapsed_time_1", 100L);
-        elapsedTime.put("elapsed_time_2", 100L);
-        elapsedTime.put("elapsed_time_3", 100L);
+        elapsedTime.put("elapsed_time_1", 0L);
+        elapsedTime.put("elapsed_time_2", 0L);
+        elapsedTime.put("elapsed_time_3", 0L);
         response.put("sequential", elapsedTime);
         response.put("javaStream", elapsedTime);
         response.put("forkJoin", elapsedTime);
 
-        Mockito.when(sequentialBOWService.sequentialWordMapCompare(Mockito.any())).thenReturn(new HashMap<>());
+        Mockito.when(sequentialService.sequentialWordMapCompare(Mockito.any())).thenReturn(new HashMap<>());
         Mockito.when(bagOfWordService.concurrentWordCount1(Mockito.any())).thenReturn(new HashMap<>());
         Mockito.when(bagOfWordService.concurrentWordCount2(Mockito.any())).thenReturn(new HashMap<>());
 
         mockMvc.perform(multipart("/api/comparison")
                         .file(validFile))
                 .andExpect(status().isOk())
-                .andExpect(content().json("{\"sequential\":{\"elapsed_time_1\":100,\"elapsed_time_2\":100,\"elapsed_time_3\":100},\"javaStream\":{\"elapsed_time_1\":100,\"elapsed_time_2\":100,\"elapsed_time_3\":100},\"forkJoin\":{\"elapsed_time_1\":100,\"elapsed_time_2\":100,\"elapsed_time_3\":100}}"));
+                .andExpect(content().json("{\"sequential\":{\"elapsed_time_1\":0,\"elapsed_time_2\":0,\"elapsed_time_3\":0},\"javaStream\":{\"elapsed_time_1\":0,\"elapsed_time_2\":0,\"elapsed_time_3\":0},\"forkJoin\":{\"elapsed_time_1\":0,\"elapsed_time_2\":0,\"elapsed_time_3\":0}}"));
     }
 
     @Test
